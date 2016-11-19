@@ -1,0 +1,105 @@
+# implementation of card game - Memory
+
+import simplegui
+import random
+
+
+#Generating number list
+list1 = range(0,8)
+list2 = range(0,8)
+deck = list1 + list2
+random.shuffle(deck)
+print deck
+
+#Constants and globals
+FONT_SIZE = 100
+HEIGHT = FONT_SIZE
+WIDTH = 60 * (len(deck))
+exposed =["x" for x in deck]
+index = 0 #logical
+idx = 0 #visual
+status = 0 #first or second card?
+guess1 = None
+guess2 = None
+tries = 0
+
+
+# helper function to initialize globals
+def new_game():
+    global exposed, index, idx, status, tries
+    exposed = ["x" for x in deck]
+    index = 0
+    idx = 0
+    status = 0
+    tries = 0
+
+# define event handlers
+def mouseclick(pos):
+    global exposed, index, status, guess1, guess2, tries
+    spacing = 0
+    index = 0
+    #print index
+    for card in deck:
+        spacing += 60
+        if deck[index] != exposed[index] and status == 0 and pos[0] in range(-60+spacing, -10+spacing) and pos[1] in range(0, 100):
+            exposed[index] = card #Chosen card saved as exposed
+            guess1 = index #position saved
+            status = 1
+            tries += 1
+            break
+        elif deck[index] != exposed[index] and status == 1 and pos[0] in range(-60+spacing, -10+spacing) and pos[1] in range(0, 100):
+            exposed[index] = card
+            guess2 = index
+            status = 2
+            break
+        elif deck[index] == exposed[index] and status == 1 and pos[0] in range(-60+spacing, -10+spacing) and pos[1] in range(0, 100):
+            exposed[index] = "x"
+            status = 0
+            break
+        elif status == 2:
+            if deck[guess1] != deck[guess2] or guess1 == guess2:
+                exposed[guess1] = "x"
+                exposed[guess2] = "x"
+                status = 0
+                break
+            elif deck[guess1] == deck[guess2]:
+                status = 0
+                
+        index += 1
+
+                        
+# cards are logically 50x100 pixels in size    
+def draw(canvas):
+    global exposed, tries, label
+    label.set_text("Tries : " + str(tries))
+    spacing = 0
+    idx = 0
+    for card in exposed:
+        spacing += 60
+        if deck[idx] == card:
+            canvas.draw_polygon([(-60+spacing, 0), (-10+spacing, 0),
+                                 (-10+spacing, 100), (-60+spacing, 100)], 1, "White", "White")
+            canvas.draw_text(str(card),(spacing - 60, FONT_SIZE-15), FONT_SIZE, "Black")    
+        else:
+            canvas.draw_polygon([(-60+spacing, 0), (-10+spacing, 0),
+                                 (-10+spacing, 100), (-60+spacing, 100)], 1, "Red", "Red")
+
+        idx += 1
+            
+# create frame and add a button and labels
+frame = simplegui.create_frame("Memory", WIDTH, HEIGHT)
+frame.add_button("Reset", new_game)
+label = frame.add_label("Tries: 0")
+
+
+
+# register event handlers
+frame.set_mouseclick_handler(mouseclick)
+frame.set_draw_handler(draw)
+
+# get things rolling
+new_game()
+frame.start()
+
+
+# Always remember to review the grading rubric
